@@ -16,8 +16,8 @@ PathNode* findSocialPath(double adjMatrix[100][100], int startPerson, int goalPe
 
 
 //Task 2 — Drone Delivery in 2D Space with Three Heuristics:
-//PathNode* findDronePath(double adjMatrix[100][100], int coords[100][2],
-//int startPoint, int goalPoint, int mode);
+PathNode* findDronePath(double adjMatrix[100][100], int coords[100][2],
+int startPoint, int goalPoint, int mode);
 
 
 //Task 3 — Warehouse Robot Navigation with Obstacles:

@@ -102,3 +102,19 @@ PathNode* findSocialPath(double adjMatrix[100][100], int startPerson, int goalPe
     
     return NodeList;
 }
+
+
+
+
+
+
+
+//Task 2
+PathNode* findDronePath(double adjMatrix[100][100], int coords[100][2],
+int startPoint, int goalPoint, int mode){
+    
+}
+
+
+
+
