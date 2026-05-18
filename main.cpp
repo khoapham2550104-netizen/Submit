@@ -2,20 +2,23 @@
 using namespace std;
 
 int main(){
-    double adjMatrix[100][100] = {
-
-    //0 1 2 3 4 5
-    {0,1,1,0,0,0}, // 0
-    {1,0,0,1,1,0}, // 1
-    {1,0,0,0,1,0}, // 2
-    {0,1,0,0,0,1}, // 3
-    {0,1,1,0,0,1}, // 4
-    {0,0,0,1,1,0}  // 5
+    int coords[100][2] = {
+        {0,0},   // node 0
+        {1,2},   // node 1
+        {3,1},   // node 2
+        {4,4},   // node 3
+        {6,5}    // node 4
     };
 
-    int start = 0;
-    int goal = 5;
-
-    printPath(findSocialPath(adjMatrix, start, goal));
+    double adjMatrix[100][100] = {
+        {0, 2.5, 0, 0, 0},
+        {2.5, 0, 1.8, 0, 0},
+        {0, 1.8, 0, 3.1, 0},
+        {0, 0, 3.1, 0, 2.2},
+        {0, 0, 0, 2.2, 0}
+    };
+    int startPoint = 0;
+    int goalPoint = 4;
+    printPath(findDronePath(adjMatrix,coords, startPoint, goalPoint, 1));
 
 }
