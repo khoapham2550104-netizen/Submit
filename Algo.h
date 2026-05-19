@@ -2,6 +2,11 @@
 #include"PathNode.h"
 // Print
 using namespace std;
+
+#define DBL_MAX 1.7976931348623157e+308
+#define INT_MAX 2147483647
+
+
 void printPath(PathNode* head);
 
 
@@ -21,8 +26,8 @@ int startPoint, int goalPoint, int mode);
 
 
 //Task 3 — Warehouse Robot Navigation with Obstacles:
-//PathNode* findWarehousePath(int warehouse[100][100], int m, int n, int startX,
-//int startY, int goalX, int goalY, int mode);
+PathNode* findWarehousePath(int warehouse[100][100], int m, int n, int startX,
+int startY, int goalX, int goalY, int mode);
 
 
 //Task 4 — Evacuation Route Planning:

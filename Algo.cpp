@@ -191,9 +191,9 @@ PathNode* findDronePath(double adjMatrix[100][100], int coords[100][2],
 int startPoint, int goalPoint, int mode){
 
     // Location of node => (coords[node][0]; coords[node][1]);
-    vector<double> h(100,INT_MAX);
-    vector<double> g(100,INT_MAX);
-    vector<double> f(100,INT_MAX);
+    vector<double> h(100,DBL_MAX);
+    vector<double> g(100,DBL_MAX);
+    vector<double> f(100,DBL_MAX);
     vector<int> previous(100,-1);
     
     // =======================PHASE 1================================
@@ -223,8 +223,8 @@ int startPoint, int goalPoint, int mode){
         }
 
         int node = queue.at(minIndex);
-        if ((int)min >= INT_MAX) return nullptr;
         if (node == goalPoint) break;
+        if (min >= DBL_MAX) return nullptr;
         queue.erase(queue.begin() + minIndex);
 
 
@@ -257,5 +257,159 @@ int startPoint, int goalPoint, int mode){
 }
 
 
+double ManhattanDistance(int x1, int y1, int x2, int y2){
+    return abs(x1 - x2) + abs(y1 - y2);
+}
+
+double ChebyshevDistance(int x1, int y1, int x2, int y2){
+    return max((x1 - x2), abs(y1 - y2));
+}
 
 
+
+
+int TrackBack(int nodeX, int nodeY, int nextX, int nextY){
+    bool left = false;
+    bool right = false;
+    bool down = false;
+    bool up = false;
+
+    left = nextX - nodeX < 0 ? true : false;
+    right = nextX - nodeX > 0 ? true : false;
+    down = nextY- nodeY < 0 ? true : false;
+    up = nextY - nodeY > 0 ? true : false;
+
+    // sẽ lưu kiểu 1->8 ô xung quanh; 
+    
+    // 1   2   3
+    // 8       4
+    // 7   6   5
+    
+    if ( left && down) return 7;
+    else if (left && up) return 1;
+    else if (left && !down && !up) return 8;
+    else if (right && down) return 5;
+    else if (right && up) return 3;
+    else if (right && !up && !down) return 4;
+    else if (!left && !right && up) return 2;
+    else if (!left && !right && down) return 6;
+    return 0;
+}
+
+vector<vector<int>> Neighbor(int X, int Y){
+    vector<vector<int>> neighbor;
+
+    for (int x = -1 ; x < 2;x++){
+        for(int y =-1 ; y < 2;y++){
+            if (x == 0 && y == 0) continue;
+            if (X + x < 0 || Y + y < 0) continue;
+            neighbor.push_back([X + x, Y + y]);
+        }
+    }
+    return neighbor;
+}
+
+
+string toString(int direction){
+    switch (direction){
+        case 1 : return "Up-Left";
+        case 2 : return "Up";
+        case 3 : return "Up-Right";
+        case 4 : return "Right";
+        case 5 : return "Down-Right";
+        case 6 : return "Down";
+        case 7 : return "Down-Left";
+        case 8 : return "Left";
+    }
+    return "";
+}
+
+
+
+
+//Task 3 — Warehouse Robot Navigation with Obstacles:
+PathNode* findWarehousePath(int warehouse[100][100], int m, int n, int startX,
+int startY, int goalX, int goalY, int mode){
+
+
+    vector<vector<double>> f(100,vector<double>(100,DBL_MAX));
+    vector<vector<double>> g(100,vector<double>(100,DBL_MAX));
+    vector<vector<double>> h(100,vector<double>(100,DBL_MAX));
+
+    vector<vector<int>> previous(100,vector<int>(100,-1)); 
+    vector<vector<int>> queue;
+    
+    
+    
+    queue.push_back([startX,startY]);  // Sẽ có minIndex = 0 và min coords;
+    f[startX][startY] = h[startX][startY];
+    g[startX][startY] = 0;
+    
+    
+    h[startX][startY] = (mode == 1? ManhattanDistance(startX,startY,goalX,goalY) : ChebyshevDistance(startX,startY,goalX,goalY)); 
+
+    // ================MERGE HEURISTIC AND COST INTO 1 PHASE============
+    while(!queue.empty()){
+        
+        int minIndex = 0;
+        int min = f[queue[0][0]][queue[0][1]];
+        
+        for(int i = 0; i < queue.size(); i++){
+            if( f[queue[i][0]][queue[i][1]] < min ){
+                min = f[queue[i][0]][queue[i][1]];
+                minIndex = i;
+                
+            }
+        }
+
+        int nodeX = queue[minIndex][0];
+        int nodeY = queue[minIndex][1];
+        queue.erase(queue.begin() + minIndex); // Soon exit
+        
+        
+        
+        if (min == DBL_MAX) return nullptr;
+        if (nodeX == goalX && nodeY == goalY) break;
+        
+        vector<vector<int>> neighbor = Neighbor(nodeX,nodeY);
+        for (int i = 0; i < neighbor.size() ; i ++ ){
+            int nextX = neighbor[i][0];
+            int nextY = neighbor[i][1];
+            
+            
+            if (warehouse[nextX][nextY] == 1) continue;
+            double temp = g[nodeX][nodeY] + (ManhattanDistance(nodeX,nodeY,nextX,nextY) == 1 ? 1 : 1.5 );
+            
+            
+            if(temp < g[nextX][nextY]){
+                g[nextX][nextY] = temp;
+                f[nextX][nextY] = g[nextX][nextY] + (mode == 1 ? ManhattanDistance(nodeX,nodeY,nextX,nextY) : ChebyshevDistance(nodeX,nodeY,nextX,nextY));
+                
+                previous[nextX][nextY] = TrackBack(nodeX,nodeY,nextX,nextY);
+                // sẽ lưu kiểu 1->8 ô xung quanh; 
+                
+                // 1   2   3
+                // 8       4
+                // 7   6   5
+                
+                queue.push_back([nextX,nextY]);
+            }
+        }
+    }
+
+
+    // =====================ADD TO PATH=======================
+    PathNode* NodeList = createPathNode("GOAL",f[goalX][goalY],g[goalX][goalY],h[goalX][goalY]);
+
+    while(previous != -1 || previous == start ....){
+
+        insertHead(toString(previous[preX][preY]),f,g,h);
+        
+        int preX...
+        int preY...
+    }
+
+    return NodeList;
+
+
+}
