@@ -27,7 +27,7 @@ PathNode* createPathNode(string name, int f,int g, int h){
 PathNode* insertTail(PathNode* &head ,string name, int f, int g, int h){
     PathNode* newNode = new PathNode(name,f,g,h, nullptr);
     PathNode* temp = head; // Init another pointer to keep the head at its position while scanning all the Node
-    if (head = nullptr){
+    if (head == nullptr){
         head = newNode;
         return head;
     }

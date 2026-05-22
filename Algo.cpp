@@ -33,7 +33,7 @@ PathNode* findSocialPath(double adjMatrix[100][100], int startPerson, int goalPe
         queue.erase(queue.begin());
     
         for(int next = 0; next < 100; next++){
-            if (adjMatrix[node][next] == 1){
+            if (adjMatrix[next][node] == 1){
                 int tempCost = h[node] + 1;
                 if (tempCost < h[next]){
                     h[next] = tempCost;
