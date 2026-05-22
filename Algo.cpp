@@ -3,17 +3,6 @@
 
 using namespace std;
 
-// To print the Path
-void printPath(PathNode* head){
-    cout << "Solution Path:\n";
-    while (head != nullptr) {
-        cout << "Node: " << head->name
-             << " | f: " << head->f
-             << " | g: " << head->g
-             << " | h: " << head->h << "\n";
-        head = head->next;
-    }
-}
 
 // Task 1 — Degrees of Separation in a Social Network:
 PathNode* findSocialPath(double adjMatrix[100][100], int startPerson, int goalPerson){
