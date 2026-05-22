@@ -4,7 +4,7 @@
 using namespace std;
 
 #define DBL_MAX 1.7976931348623157e+308
-#define INT_MAX 2147483647
+// INT_MAX đã được define rồi
 
 
 void printPath(PathNode* head);

@@ -262,22 +262,18 @@ double ManhattanDistance(int x1, int y1, int x2, int y2){
 }
 
 double ChebyshevDistance(int x1, int y1, int x2, int y2){
-    return max((x1 - x2), abs(y1 - y2));
+    return max(abs(x1 - x2), abs(y1 - y2));
 }
 
 
 
 
 int TrackBack(int nodeX, int nodeY, int nextX, int nextY){
-    bool left = false;
-    bool right = false;
-    bool down = false;
-    bool up = false;
 
-    left = nextX - nodeX < 0 ? true : false;
-    right = nextX - nodeX > 0 ? true : false;
-    down = nextY- nodeY < 0 ? true : false;
-    up = nextY - nodeY > 0 ? true : false;
+    bool up    = nextX < nodeX;
+    bool down  = nextX > nodeX;
+    bool left  = nextY < nodeY;
+    bool right = nextY > nodeY;
 
     // sẽ lưu kiểu 1->8 ô xung quanh; 
     
@@ -296,14 +292,14 @@ int TrackBack(int nodeX, int nodeY, int nextX, int nextY){
     return 0;
 }
 
-vector<vector<int>> Neighbor(int X, int Y){
+vector<vector<int>> Neighbor(int X, int Y, int m, int n){
     vector<vector<int>> neighbor;
 
     for (int x = -1 ; x < 2;x++){
         for(int y =-1 ; y < 2;y++){
             if (x == 0 && y == 0) continue;
-            if (X + x < 0 || Y + y < 0) continue;
-            neighbor.push_back([X + x, Y + y]);
+            if (X + x < 0 || Y + y < 0 || X + x >= m || Y + y >= n) continue;
+            neighbor.push_back({(X + x),(Y + y)});
         }
     }
     return neighbor;
@@ -325,6 +321,34 @@ string toString(int direction){
 }
 
 
+int PreX(int X, int pos){
+    switch(pos){
+        case 1: return X + 1;
+        case 2: return X + 1;
+        case 3: return X + 1;
+        case 4: return X;
+        case 5: return X - 1;
+        case 6: return X - 1;
+        case 7: return X - 1;
+        case 8: return X;
+    }
+    return X;
+}
+
+int PreY(int Y, int pos){
+    switch(pos){
+        case 1: return Y + 1;
+        case 2: return Y;
+        case 3: return Y - 1;
+        case 4: return Y - 1;
+        case 5: return Y - 1;
+        case 6: return Y;
+        case 7: return Y + 1;
+        case 8: return Y + 1;
+    }
+    return Y;
+}
+
 
 
 //Task 3 — Warehouse Robot Navigation with Obstacles:
@@ -338,21 +362,23 @@ int startY, int goalX, int goalY, int mode){
 
     vector<vector<int>> previous(100,vector<int>(100,-1)); 
     vector<vector<int>> queue;
+    vector<vector<bool>> visited(100, vector<bool>(100,false)); 
     
     
     
-    queue.push_back([startX,startY]);  // Sẽ có minIndex = 0 và min coords;
-    f[startX][startY] = h[startX][startY];
+    queue.push_back({startX,startY});  // Sẽ có minIndex = 0 và min coords;
     g[startX][startY] = 0;
-    
-    
-    h[startX][startY] = (mode == 1? ManhattanDistance(startX,startY,goalX,goalY) : ChebyshevDistance(startX,startY,goalX,goalY)); 
+
+    h[startX][startY] =
+    (mode == 1 ? ManhattanDistance(startX,startY,goalX,goalY): ChebyshevDistance(startX,startY,goalX,goalY));
+    h[goalX][goalY] = 0;
+    f[startX][startY] = g[startX][startY] + h[startX][startY];
 
     // ================MERGE HEURISTIC AND COST INTO 1 PHASE============
     while(!queue.empty()){
         
         int minIndex = 0;
-        int min = f[queue[0][0]][queue[0][1]];
+        double min = f[queue[0][0]][queue[0][1]];
         
         for(int i = 0; i < queue.size(); i++){
             if( f[queue[i][0]][queue[i][1]] < min ){
@@ -365,13 +391,15 @@ int startY, int goalX, int goalY, int mode){
         int nodeX = queue[minIndex][0];
         int nodeY = queue[minIndex][1];
         queue.erase(queue.begin() + minIndex); // Soon exit
-        
-        
+        if(visited[nodeX][nodeY]) continue;
+        visited[nodeX][nodeY] = true;
+        if (nodeX == goalX && nodeY == goalY) break;
+
         
         if (min == DBL_MAX) return nullptr;
-        if (nodeX == goalX && nodeY == goalY) break;
+
         
-        vector<vector<int>> neighbor = Neighbor(nodeX,nodeY);
+        vector<vector<int>> neighbor = Neighbor(nodeX,nodeY,m,n);
         for (int i = 0; i < neighbor.size() ; i ++ ){
             int nextX = neighbor[i][0];
             int nextY = neighbor[i][1];
@@ -383,7 +411,10 @@ int startY, int goalX, int goalY, int mode){
             
             if(temp < g[nextX][nextY]){
                 g[nextX][nextY] = temp;
-                f[nextX][nextY] = g[nextX][nextY] + (mode == 1 ? ManhattanDistance(nodeX,nodeY,nextX,nextY) : ChebyshevDistance(nodeX,nodeY,nextX,nextY));
+                if (h[nextX][nextY] == DBL_MAX){
+                    h[nextX][nextY] = mode == 1 ? ManhattanDistance(goalX,goalY,    nextX,nextY) : ChebyshevDistance(goalX,goalY,nextX,nextY);
+                }
+                f[nextX][nextY] = g[nextX][nextY] + h[nextX][nextY];
                 
                 previous[nextX][nextY] = TrackBack(nodeX,nodeY,nextX,nextY);
                 // sẽ lưu kiểu 1->8 ô xung quanh; 
@@ -391,27 +422,29 @@ int startY, int goalX, int goalY, int mode){
                 // 1   2   3
                 // 8       4
                 // 7   6   5
-                
-                queue.push_back([nextX,nextY]);
+                if(f[nextX][nextY] != DBL_MAX) queue.push_back({nextX,nextY});
             }
         }
     }
 
 
     // =====================ADD TO PATH=======================
+    if(f[goalX][goalY] == DBL_MAX) return nullptr;
     PathNode* NodeList = createPathNode("GOAL",f[goalX][goalY],g[goalX][goalY],h[goalX][goalY]);
 
-    while(previous != -1 || previous == start ....){
+    int preX = goalX;
+    int preY = goalY;
 
-        insertHead(toString(previous[preX][preY]),f,g,h);
-        
-        int preX...
-        int preY...
+    while(previous[preX][preY] != -1){
+        insertHead(NodeList, toString(previous[preX][preY]),f[preX][preY],g[preX][preY],h[preX][preY]);
+        int tempDirection = previous[preX][preY]; 
+        preX = PreX(preX, tempDirection);
+        preY = PreY(preY, tempDirection);
     }
-
+    
     return NodeList;
-
-
 }
 
-// We will changing codes in task 3
+
+
+
