@@ -292,18 +292,6 @@ int TrackBack(int nodeX, int nodeY, int nextX, int nextY){
     return 0;
 }
 
-vector<vector<int>> Neighbor(int X, int Y, int m, int n){
-    vector<vector<int>> neighbor;
-
-    for (int x = -1 ; x < 2;x++){
-        for(int y =-1 ; y < 2;y++){
-            if (x == 0 && y == 0) continue;
-            if (X + x < 0 || Y + y < 0 || X + x >= m || Y + y >= n) continue;
-            neighbor.push_back({(X + x),(Y + y)});
-        }
-    }
-    return neighbor;
-}
 
 
 string toString(int direction){
@@ -450,9 +438,169 @@ int startY, int goalX, int goalY, int mode){
 
 // ==================================TASK 4 =================================
 
+
+double moveCost(int X1, int Y1, int X2, int Y2){
+    int min = min(abs(X1 - X2), abs(Y1 - Y2));
+    int max = max(abs(X1 - X2), abs(Y1 - Y2));
+
+    if (min == 0) return 1*max;
+    else{
+        return min * 1.5 + (max - min) * 1;
+    }
+    return 0;
+}
+
+
+vector<vector<int>> Neighbor(int X, int Y, int m, int n){
+    vector<vector<int>> neighbor;
+
+    for (int x = -1 ; x < 2;x++){
+        for(int y =-1 ; y < 2;y++){
+            if (x == 0 && y == 0) continue;
+            if (X + x < 0 || Y + y < 0 || X + x >= m || Y + y >= n) continue;
+            neighbor.push_back({(X + x),(Y + y)});
+        }
+    }
+    return neighbor;
+}
+
+
+
+
 PathNode* findEvacuationPath(int floorPlan[100][100], int m, int n, int startX,
 int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
     
     memset(weightMatrix, 0, sizeof(weightMatrix));
+    vector<double> h(100, DBL_MAX);
+    // Tạo weight matrixx
+    int verticesCurrent = 0, verticesNext = 0, range = m*n;
+    int start, end;
+    for(int i = 0; i < m; i++){
+        for(int i = 0; i < m; i++){
+            
+            int currX = i;
+            int currY = j;
+            h[verticesCurrent] = mode == 1 ? ManhattanDistance(currX,currY,exitX,exitY) : ChebyshevDistance(currX,currY,exitX,exitY);
+
+            if (currX == startX && currY == startY){
+                start = verticesCurrent;
+            }
+            else if (currX == exitX && currY == exitY){
+                end = verticesCurrent;
+                h[end] = 0;
+            }
+            
+            
+            vector<vector<int>> neighbor = Neighbor(currX,currY);
+            for (vector<int> next : neighbor){
+                int nextX = next[0];
+                int nextY = next[1];
+                if (visited[nextX][nextY] == true) continue;
+
+                double cost = moveCost(currX,currY,nextX,nextY);
+                weightMatrix[verticesCurrent][verticesNext] = cost;
+
+                
+                
+                
+                // Để cộng theo mảng chiều ngang
+                verticesNext++;
+            }
+            // Cộng phần tử mảng chiều dọc
+            // Bổ sung phần heuristic cost vào ở đây luôn
+            verticesCurrent++;
+        }
+    }
+
+    if (start == end) return nullptr;
+
+    // Sử dụng dijkstra như bình thường
+
+
+    // Init data
+    vector<double> g(100, DBL_MAX);
+    vector<double> f(100, DBL_MAX);
+    vector<int>    previous(100,-1);
+    vector<int> queue;
+    vector<bool> visited;
+
+
+    f[start] = h[start];
+    g[start] = 0;
+    queue.push_back(start);
+
+    while(!queue.empty){
+        // Lấy phần tử đầu tiên của queue.
+        
+        int min = f[queue[0]], minIndex = 0;
+        for (int index  =0; index < queue.size() ; index++){
+            if( min >   f[queue[index]]){
+                min = f[queue[index]];
+                minIndex = index;
+            }
+        }
+        
+        int current = queue.[minIndex];
+        if (current = end) break; 
+        if (f[current] == DBL_MAX) return nullptr;
+        queue.erase(queue.begin() + minIndex);
+
+
+
+        for(int next = 0; next < range; next ++){
+            if (weightMatrix[current][next] == 0) continue;
+            double temp = g[current] + weightMatrix[current][next];
+            if (temp  < g[current]){
+                g[next] = temp;
+                f[next] = temp + h[next];
+                previous[next] = current;
+                queue.push_back(next);
+            }
+        }
+    }
+
+        
     
+
+
+    // Create node path
+    PathNode* NodeList = new PathNode(to_string(end),f[end],g[end],h[end],nullptr)
+    while(pre != start){
+        int pre = previous[end];
+        insertHead(NodeList,to_string(pre), f[pre], g[pre], h[pre]);
+    }
+    insertHead(NodeList, to_string(start), f[start], g[start], h[start]);
+
+    return NodeList;
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
