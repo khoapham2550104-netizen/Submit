@@ -3,6 +3,7 @@
 
 using namespace std;
 
+vector<vector<int>> Neighbor(int X, int Y, int m, int n);
 // To print the Path
 void printPath(PathNode* head){
     cout << "Solution Path:\n";
@@ -440,8 +441,10 @@ int startY, int goalX, int goalY, int mode){
 
 
 double moveCost(int X1, int Y1, int X2, int Y2){
-    int min = min(abs(X1 - X2), abs(Y1 - Y2));
-    int max = max(abs(X1 - X2), abs(Y1 - Y2));
+    double absX = abs(X1 - X2);
+    double absY = abs(Y1 - Y2);
+    double min = absX > absY ? absY : absX; 
+    double max = absX > absY ? absY : absX;
 
     if (min == 0) return 1*max;
     else{
@@ -469,46 +472,41 @@ vector<vector<int>> Neighbor(int X, int Y, int m, int n){
 
 PathNode* findEvacuationPath(int floorPlan[100][100], int m, int n, int startX,
 int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
-    
-    memset(weightMatrix, 0, sizeof(weightMatrix));
+
     vector<double> h(100, DBL_MAX);
     // Tạo weight matrixx
-    int verticesCurrent = 0, verticesNext = 0, range = m*n;
+    int range = m*n;
     int start, end;
     for(int i = 0; i < m; i++){
-        for(int i = 0; i < m; i++){
+        for(int j = 0; j < n; j++){
             
             int currX = i;
             int currY = j;
-            h[verticesCurrent] = mode == 1 ? ManhattanDistance(currX,currY,exitX,exitY) : ChebyshevDistance(currX,currY,exitX,exitY);
-
+            int coordCurrent = currX * m + currY;
+            h[coordCurrent] = mode == 1 ? ManhattanDistance(currX,currY,exitX,exitY) : ChebyshevDistance(currX,currY,exitX,exitY);
             if (currX == startX && currY == startY){
-                start = verticesCurrent;
+                start = coordCurrent;
             }
             else if (currX == exitX && currY == exitY){
-                end = verticesCurrent;
+                end = coordCurrent;
                 h[end] = 0;
             }
             
             
-            vector<vector<int>> neighbor = Neighbor(currX,currY);
+            vector<vector<int>> neighbor = Neighbor(currX,currY,m,n);
             for (vector<int> next : neighbor){
                 int nextX = next[0];
                 int nextY = next[1];
-                if (visited[nextX][nextY] == true) continue;
-
+                int coordNext = nextX * m + nextY;
                 double cost = moveCost(currX,currY,nextX,nextY);
-                weightMatrix[verticesCurrent][verticesNext] = cost;
-
-                
-                
+                weightMatrix[coordCurrent][coordNext] = cost;
                 
                 // Để cộng theo mảng chiều ngang
-                verticesNext++;
+
             }
             // Cộng phần tử mảng chiều dọc
             // Bổ sung phần heuristic cost vào ở đây luôn
-            verticesCurrent++;
+
         }
     }
 
@@ -529,10 +527,10 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
     g[start] = 0;
     queue.push_back(start);
 
-    while(!queue.empty){
+    while(!queue.empty()){
         // Lấy phần tử đầu tiên của queue.
         
-        int min = f[queue[0]], minIndex = 0;
+        double min = f[queue[0]], minIndex = 0;
         for (int index  =0; index < queue.size() ; index++){
             if( min >   f[queue[index]]){
                 min = f[queue[index]];
@@ -540,8 +538,8 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
             }
         }
         
-        int current = queue.[minIndex];
-        if (current = end) break; 
+        int current = queue[minIndex];
+        if (current == end) break; 
         if (f[current] == DBL_MAX) return nullptr;
         queue.erase(queue.begin() + minIndex);
 
@@ -550,7 +548,7 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
         for(int next = 0; next < range; next ++){
             if (weightMatrix[current][next] == 0) continue;
             double temp = g[current] + weightMatrix[current][next];
-            if (temp  < g[current]){
+            if (temp  < g[next]){
                 g[next] = temp;
                 f[next] = temp + h[next];
                 previous[next] = current;
@@ -564,12 +562,12 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
 
 
     // Create node path
-    PathNode* NodeList = new PathNode(to_string(end),f[end],g[end],h[end],nullptr)
+    PathNode* NodeList = new PathNode(to_string(end),f[end],g[end],h[end],nullptr);
+    int pre = end;
     while(pre != start){
-        int pre = previous[end];
+        pre = previous[pre];
         insertHead(NodeList,to_string(pre), f[pre], g[pre], h[pre]);
     }
-    insertHead(NodeList, to_string(start), f[start], g[start], h[start]);
 
     return NodeList;
 
