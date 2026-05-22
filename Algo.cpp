@@ -448,3 +448,11 @@ int startY, int goalX, int goalY, int mode){
 
 
 
+// ==================================TASK 4 =================================
+
+PathNode* findEvacuationPath(int floorPlan[100][100], int m, int n, int startX,
+int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
+    
+    memset(weightMatrix, 0, sizeof(weightMatrix));
+    
+}
