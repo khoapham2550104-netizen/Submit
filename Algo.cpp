@@ -104,15 +104,6 @@ PathNode* findSocialPath(double adjMatrix[100][100], int startPerson, int goalPe
     return NodeList;
 }
 
-
-
-
-
-
-
-
-
-
 double ManhattanDistance(int coords[100][2], int node1, int node2){
     return abs(coords[node1][0] - coords[node2][0]) + abs(coords[node1][1] - coords[node2][1]);
 }
@@ -122,68 +113,35 @@ double EuclideanDistance(int coords[100][2], int node1, int node2){
 }
 
 double ChebyshevDistance(int coords[100][2], int node1, int node2){
-    return max((coords[node1][0] - coords[node2][0]),(coords[node1][1] - coords[node2][1]));
+    return max(abs(coords[node1][0] - coords[node2][0]),abs(coords[node1][1] - coords[node2][1]));
 }
+
 
 
 
 void MODE1(double adjMatrix[100][100] ,int coords[100][2], int startPoint, int goalPoint, vector<double>& h){
-    vector<int> queue;
-    h.at(goalPoint) = 0;
-    queue.push_back(goalPoint);
-    while(!queue.empty()){
-
-        int node = queue.back();
-        queue.pop_back();
-        for(int next = 0; next < 100; next ++){
-            if (adjMatrix[node][next] <= 0) continue;
-            double temp = h[node] + ManhattanDistance(coords,node,next);
-            if (temp < h[next]){
-                h[next] = temp;
-                queue.push_back(next);
-            }
-        }
+    for(int i =0; i < 100 ;i ++){
+        h[i] = ManhattanDistance(coords,i,goalPoint);
     }
 }
 
 void MODE2(double adjMatrix[100][100] ,int coords[100][2], int startPoint, int goalPoint, vector<double>& h){
-    vector<int> queue;
-    h.at(goalPoint) = 0;
-    queue.push_back(goalPoint);
-    while(!queue.empty()){
-
-        int node = queue.back();
-        queue.pop_back();
-        for(int next = 0; next < 100; next ++){
-            if (adjMatrix[node][next] <= 0) continue;
-            double temp = h[node] + EuclideanDistance(coords,node,next);
-            if (temp < h[next]){
-                h[next] = temp;
-                queue.push_back(next);
-            }
-        }
+    for(int i =0; i < 100 ;i ++){
+        h[i] = EuclideanDistance(coords,i,goalPoint);
     }
 }
 
 void MODE3(double adjMatrix[100][100] ,int coords[100][2], int startPoint, int goalPoint, vector<double>& h){
-    vector<int> queue;
-    h.at(goalPoint) = 0;
-    queue.push_back(goalPoint);
-    while(!queue.empty()){
-
-        int node = queue.back();
-        queue.pop_back();
-        for(int next = 0; next < 100; next ++){
-            if (adjMatrix[node][next] <= 0) continue;
-            double temp = h[node] + ChebyshevDistance(coords,node,next);
-            if (temp < h[next]){
-                h[next] = temp;
-                queue.push_back(next);
-            }
-        }
+    for(int i =0; i < 100 ;i ++){
+        h[i] = ChebyshevDistance(coords,i,goalPoint);
     }
 }
 
+
+string toCoord(int coords[100][2], int point){
+    string name = "(" + to_string(coords[point][0]) + "," + to_string(coords[point][1]) + ")";
+    return name;
+}
 
 
 
@@ -207,6 +165,7 @@ int startPoint, int goalPoint, int mode){
     // EVLUATE THE ACTUAL COST
     
     vector<int> queue;
+    vector<bool> visited(100, false);
     queue.push_back(startPoint);
     g.at(startPoint) = 0;
     f.at(startPoint) = h.at(startPoint);
@@ -221,9 +180,16 @@ int startPoint, int goalPoint, int mode){
                 min = f[queue.at(i)];
                 minIndex = i;
             }
+            else if (f[queue.at(i)] == min){
+                if (h[queue.at(i)] < h[queue.at(minIndex)]) {
+                    minIndex = i;
+                }
+            }
         }
-
+        
         int node = queue.at(minIndex);
+        visited[node] = true;
+
         if (node == goalPoint) break;
         if (min >= DBL_MAX) return nullptr;
         queue.erase(queue.begin() + minIndex);
@@ -237,7 +203,9 @@ int startPoint, int goalPoint, int mode){
                 g[next] = cost;
                 f[next] = g[next] + h[next];
                 previous[next] = node;
-                queue.push_back(next);
+                if (visited[next] == false){
+                    queue.push_back(next);
+                }
             }
         }
     }
@@ -245,17 +213,18 @@ int startPoint, int goalPoint, int mode){
     // =======================PHASE 3================================
     // CREATE NODE PATH
     
-    PathNode* NodeList = new PathNode(to_string(goalPoint),f[goalPoint],g[goalPoint],h[goalPoint],nullptr);
+    PathNode* NodeList = new PathNode(toCoord(coords,goalPoint),f[goalPoint],g[goalPoint],h[goalPoint],nullptr);
     int pre = goalPoint;
 
     while (pre != startPoint){
         pre = previous[pre];
         if (pre == -1) return nullptr;
-        insertHead(NodeList,to_string(pre),f[pre],g[pre],h[pre]);
+        insertHead(NodeList,toCoord(coords,pre),f[pre],g[pre],h[pre]);
     }
 
     return NodeList;
 }
+
 
 
 double ManhattanDistance(int x1, int y1, int x2, int y2){
@@ -265,9 +234,6 @@ double ManhattanDistance(int x1, int y1, int x2, int y2){
 double ChebyshevDistance(int x1, int y1, int x2, int y2){
     return max(abs(x1 - x2), abs(y1 - y2));
 }
-
-
-
 
 int TrackBack(int nodeX, int nodeY, int nextX, int nextY){
 
@@ -351,18 +317,18 @@ int startY, int goalX, int goalY, int mode){
 
     vector<vector<int>> previous(100,vector<int>(100,-1)); 
     vector<vector<int>> queue;
-    vector<vector<bool>> visited(100, vector<bool>(100,false)); 
+    vector<vector<bool>> visited(100, vector<bool>(100, false));
     
     
     
-    queue.push_back({startX,startY});  // Sẽ có minIndex = 0 và min coords;
     g[startX][startY] = 0;
-
+    
     h[startX][startY] =
     (mode == 1 ? ManhattanDistance(startX,startY,goalX,goalY): ChebyshevDistance(startX,startY,goalX,goalY));
     h[goalX][goalY] = 0;
     f[startX][startY] = g[startX][startY] + h[startX][startY];
-
+    
+    queue.push_back({startX,startY});  // Sẽ có minIndex = 0 và min coords;
     // ================MERGE HEURISTIC AND COST INTO 1 PHASE============
     while(!queue.empty()){
         
@@ -372,37 +338,48 @@ int startY, int goalX, int goalY, int mode){
         for(int i = 0; i < queue.size(); i++){
             if( f[queue[i][0]][queue[i][1]] < min ){
                 min = f[queue[i][0]][queue[i][1]];
-                minIndex = i;
-                
+                minIndex = i; 
+            }
+            else if (f[queue[i][0]][queue[i][1]] == min ){
+                if( g[queue[i][0]][queue[i][1]] < g[queue[minIndex][0]][queue[minIndex][1]]){
+                    minIndex = i;
+                }
+                else if(g[queue[i][0]][queue[i][1]] == g[queue[minIndex][0]][queue[minIndex][1]]){
+                    if (h[queue[i][0]][queue[i][1]] < h[queue[minIndex][0]][queue[minIndex][1]]){
+                        minIndex = i;
+                    }
+                }
             }
         }
 
         int nodeX = queue[minIndex][0];
         int nodeY = queue[minIndex][1];
         queue.erase(queue.begin() + minIndex); // Soon exit
-        if(visited[nodeX][nodeY]) continue;
-        visited[nodeX][nodeY] = true;
         if (nodeX == goalX && nodeY == goalY) break;
+        if (visited[nodeX][nodeY] == true) continue; // Bỏ qua node này khi đã discover rồi
 
-        
+        // Không tồn tại đường đi tới đó nữa
         if (min == DBL_MAX) return nullptr;
+        visited[nodeX][nodeY] = true;
 
-        
         vector<vector<int>> neighbor = Neighbor(nodeX,nodeY,m,n);
+        
         for (int i = 0; i < neighbor.size() ; i ++ ){
             int nextX = neighbor[i][0];
             int nextY = neighbor[i][1];
             
             
             if (warehouse[nextX][nextY] == 1) continue;
-            double temp = g[nodeX][nodeY] + (ManhattanDistance(nodeX,nodeY,nextX,nextY) == 1 ? 1 : 1.5 );
+            if (visited[nextX][nextY]) continue;
+
+            double movecost = (ManhattanDistance(nodeX,nodeY,nextX,nextY) == 1 ? 1 : 1.5 );
+            double temp = g[nodeX][nodeY] + movecost;
             
             
             if(temp < g[nextX][nextY]){
                 g[nextX][nextY] = temp;
-                if (h[nextX][nextY] == DBL_MAX){
-                    h[nextX][nextY] = mode == 1 ? ManhattanDistance(goalX,goalY,    nextX,nextY) : ChebyshevDistance(goalX,goalY,nextX,nextY);
-                }
+                h[nextX][nextY] = mode == 1 ? ManhattanDistance(goalX,goalY, nextX,nextY) : ChebyshevDistance(goalX,goalY,nextX,nextY);
+            
                 f[nextX][nextY] = g[nextX][nextY] + h[nextX][nextY];
                 
                 previous[nextX][nextY] = TrackBack(nodeX,nodeY,nextX,nextY);
@@ -411,7 +388,7 @@ int startY, int goalX, int goalY, int mode){
                 // 1   2   3
                 // 8       4
                 // 7   6   5
-                if(f[nextX][nextY] != DBL_MAX) queue.push_back({nextX,nextY});
+                queue.push_back({nextX,nextY});
             }
         }
     }
@@ -430,6 +407,8 @@ int startY, int goalX, int goalY, int mode){
         preX = PreX(preX, tempDirection);
         preY = PreY(preY, tempDirection);
     }
+    
+    deleteTail(NodeList);
     
     return NodeList;
 }
