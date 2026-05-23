@@ -22,7 +22,7 @@ PathNode* createPathNode(string name, double f,double g, double h);
 // Insert Node to Tail
 PathNode* insertTail(PathNode* &head ,string name, double f, double g, double h);
 
-PathNode* deleteTail(PathNode* &head ,string name, double f, double g, double h);
+PathNode* deleteTail(PathNode* &head);
 
 
 // Insert Node to Head

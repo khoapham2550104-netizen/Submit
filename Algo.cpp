@@ -3,7 +3,7 @@
 
 using namespace std;
 
-vector<vector<int>> Neighbor(int X, int Y, int m, int n);
+
 // To print the Path
 void printPath(PathNode* head){
     cout << "Solution Path:\n";
@@ -16,7 +16,7 @@ void printPath(PathNode* head){
     }
 }
 
-// Task 1 — Degrees of Separation in a Social Network:
+// ==================================TASK 1 =================================
 PathNode* findSocialPath(double adjMatrix[100][100], int startPerson, int goalPerson){
 
     // BFS to find heuristic cost
@@ -145,7 +145,7 @@ string toCoord(int coords[100][2], int point){
 
 
 
-//Task 2
+// ==================================TASK 2 =================================
 PathNode* findDronePath(double adjMatrix[100][100], int coords[100][2],
 int startPoint, int goalPoint, int mode){
 
@@ -306,7 +306,7 @@ int PreY(int Y, int pos){
 
 
 
-//Task 3 — Warehouse Robot Navigation with Obstacles:
+// ==================================TASK 3 =================================
 PathNode* findWarehousePath(int warehouse[100][100], int m, int n, int startX,
 int startY, int goalX, int goalY, int mode){
 
