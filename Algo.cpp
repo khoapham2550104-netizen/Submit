@@ -196,7 +196,7 @@ int startPoint, int goalPoint, int mode){
 
 
         for(int next = 0; next < 100; next++){
-            if(adjMatrix[node][next] <= 0) continue;
+            if(adjMatrix[node][next] < 0) continue;
 
             double cost = g[node] + adjMatrix[node][next];
             if (cost < g[next]){
@@ -432,7 +432,6 @@ double moveCost(int X1, int Y1, int X2, int Y2){
     return 0;
 }
 
-
 vector<vector<int>> Neighbor(int X, int Y, int m, int n){
     vector<vector<int>> neighbor;
 
@@ -446,8 +445,13 @@ vector<vector<int>> Neighbor(int X, int Y, int m, int n){
     return neighbor;
 }
 
-
-
+string toCoord(int value, int m, int n){
+    
+    int x = value / n;
+    int y = value % n;
+    string res = "(" + to_string(x) + "," + to_string(y) + ")" ;
+    return res;
+}
 
 PathNode* findEvacuationPath(int floorPlan[100][100], int m, int n, int startX,
 int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
@@ -456,12 +460,30 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
     // Tạo weight matrixx
     int range = m*n;
     int start, end;
+    // Bước khởi tạo một ma trận trọng số
     for(int i = 0; i < m; i++){
         for(int j = 0; j < n; j++){
             
             int currX = i;
             int currY = j;
-            int coordCurrent = currX * m + currY;
+            int coordCurrent = currX * n + currY;
+            // Công thức chuyển hệ toạ độ thành các node;
+            // Sẽ assign thứ tự từ trái sang phải
+            // Với ma trận m x n = 3 x 5
+            // 0  1  2  3  4 
+            // 5  6  7  8  9
+            // 10 11 12 13 14
+
+            // Cthuc tổng quát: hàng i cột j
+            // i * 5 + j
+
+            // Công thức chuyển đổi lại:
+            // Tìm phần dư của Nodes cho 5 (tổng quát là cho n)
+            // => X = Nodes / n;
+            // => Y = Nodes % n; 
+
+
+    
             h[coordCurrent] = mode == 1 ? ManhattanDistance(currX,currY,exitX,exitY) : ChebyshevDistance(currX,currY,exitX,exitY);
             if (currX == startX && currY == startY){
                 start = coordCurrent;
@@ -471,7 +493,6 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
                 h[end] = 0;
             }
             
-            
             vector<vector<int>> neighbor = Neighbor(currX,currY,m,n);
             for (vector<int> next : neighbor){
                 int nextX = next[0];
@@ -480,10 +501,10 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
                 double cost = moveCost(currX,currY,nextX,nextY);
                 weightMatrix[coordCurrent][coordNext] = cost;
                 
-                // Để cộng theo mảng chiều ngang
+          
 
             }
-            // Cộng phần tử mảng chiều dọc
+
             // Bổ sung phần heuristic cost vào ở đây luôn
 
         }
@@ -499,7 +520,7 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
     vector<double> f(100, DBL_MAX);
     vector<int>    previous(100,-1);
     vector<int> queue;
-    vector<bool> visited;
+    vector<bool> visited(100, false);
 
 
     f[start] = h[start];
@@ -521,11 +542,13 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
         if (current == end) break; 
         if (f[current] == DBL_MAX) return nullptr;
         queue.erase(queue.begin() + minIndex);
-
-
+        
+        if (visited[current] == true) continue;
+        visited[current] = true;
 
         for(int next = 0; next < range; next ++){
-            if (weightMatrix[current][next] == 0) continue;
+            if (weightMatrix[current][next] < 0) continue;
+            if (visited[next] == true) continue;
             double temp = g[current] + weightMatrix[current][next];
             if (temp  < g[next]){
                 g[next] = temp;
@@ -541,11 +564,11 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
 
 
     // Create node path
-    PathNode* NodeList = new PathNode(to_string(end),f[end],g[end],h[end],nullptr);
+    PathNode* NodeList = new PathNode(toCoord(end,m,n),f[end],g[end],h[end],nullptr);
     int pre = end;
     while(pre != start){
         pre = previous[pre];
-        insertHead(NodeList,to_string(pre), f[pre], g[pre], h[pre]);
+        insertHead(NodeList,toCoord(pre,m,n), f[pre], g[pre], h[pre]);
     }
 
     return NodeList;
