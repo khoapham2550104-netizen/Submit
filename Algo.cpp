@@ -413,7 +413,14 @@ int startY, int goalX, int goalY, int mode){
     return NodeList;
 }
 
-
+void printMatrix(double matrix[100][100], int size){
+    for (int i =0 ; i < 100 ; i ++){
+        for (int j = 0; j < 100 ;j++){
+            cout << matrix[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
 
 
 // ==================================TASK 4 =================================
@@ -423,7 +430,7 @@ double moveCost(int X1, int Y1, int X2, int Y2){
     double absX = abs(X1 - X2);
     double absY = abs(Y1 - Y2);
     double min = absX > absY ? absY : absX; 
-    double max = absX > absY ? absY : absX;
+    double max = absX < absY ? absY : absX;
 
     if (min == 0) return 1*max;
     else{
@@ -470,7 +477,7 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
             // Công thức chuyển hệ toạ độ thành các node;
             // Sẽ assign thứ tự từ trái sang phải
             // Với ma trận m x n = 3 x 5
-            // 0  1  2  3  4 
+                // 0  1  2  3  4 
             // 5  6  7  8  9
             // 10 11 12 13 14
 
@@ -482,8 +489,6 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
             // => X = Nodes / n;
             // => Y = Nodes % n; 
 
-
-    
             h[coordCurrent] = mode == 1 ? ManhattanDistance(currX,currY,exitX,exitY) : ChebyshevDistance(currX,currY,exitX,exitY);
             if (currX == startX && currY == startY){
                 start = coordCurrent;
@@ -497,19 +502,17 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
             for (vector<int> next : neighbor){
                 int nextX = next[0];
                 int nextY = next[1];
-                int coordNext = nextX * m + nextY;
+                int coordNext = nextX * n + nextY;
+          
                 double cost = moveCost(currX,currY,nextX,nextY);
                 weightMatrix[coordCurrent][coordNext] = cost;
-                
-          
-
             }
 
             // Bổ sung phần heuristic cost vào ở đây luôn
-
         }
     }
 
+    
     if (start == end) return nullptr;
 
     // Sử dụng dijkstra như bình thường
@@ -525,13 +528,12 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
 
     f[start] = h[start];
     g[start] = 0;
+    queue.clear();
     queue.push_back(start);
-
     while(!queue.empty()){
         // Lấy phần tử đầu tiên của queue.
-        
         double min = f[queue[0]], minIndex = 0;
-        for (int index  =0; index < queue.size() ; index++){
+        for (int index  = 1; index < queue.size() ; index++){
             if( min >   f[queue[index]]){
                 min = f[queue[index]];
                 minIndex = index;
@@ -539,15 +541,15 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
         }
         
         int current = queue[minIndex];
-        if (current == end) break; 
-        if (f[current] == DBL_MAX) return nullptr;
-        queue.erase(queue.begin() + minIndex);
-        
         if (visited[current] == true) continue;
         visited[current] = true;
+        if (f[current] == DBL_MAX) return nullptr;
+        queue.erase(queue.begin() + minIndex);
+        if (current == end) break;
 
+        
         for(int next = 0; next < range; next ++){
-            if (weightMatrix[current][next] < 0) continue;
+            if (weightMatrix[current][next] == 0) continue;
             if (visited[next] == true) continue;
             double temp = g[current] + weightMatrix[current][next];
             if (temp  < g[next]){
@@ -557,6 +559,8 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
                 queue.push_back(next);
             }
         }
+        
+        
     }
 
         
@@ -565,10 +569,12 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
 
     // Create node path
     PathNode* NodeList = new PathNode(toCoord(end,m,n),f[end],g[end],h[end],nullptr);
-    int pre = end;
-    while(pre != start){
-        pre = previous[pre];
+    int pre = previous[end];
+
+    while(pre != -1){
         insertHead(NodeList,toCoord(pre,m,n), f[pre], g[pre], h[pre]);
+        cout << toCoord(pre,m,n) << endl;
+        pre = previous[pre];
     }
 
     return NodeList;

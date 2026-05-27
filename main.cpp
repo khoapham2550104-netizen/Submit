@@ -14,7 +14,7 @@ int main(){
     int exitY = 6;
     double weightMatrix[100][100];
     int mode = 1;
-    
+
     printPath(findEvacuationPath(floorPlan, m, n, startX, startY, exitX, exitY, weightMatrix, mode));
 
 }
