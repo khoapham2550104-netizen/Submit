@@ -83,99 +83,17 @@ double ChebyshevDistance(int x1, int y1, int x2, int y2){
     return max(abs(x1 - x2), abs(y1 - y2));
 }
 
-int TrackBack(int nodeX, int nodeY, int nextX, int nextY){
-
-    bool up    = nextX < nodeX;
-    bool down  = nextX > nodeX;
-    bool left  = nextY < nodeY;
-    bool right = nextY > nodeY;
-
-    // sẽ lưu kiểu 1->8 ô xung quanh; 
-    
-    // 1   2   3
-    // 8       4
-    // 7   6   5
-    
-    if ( left && down) return 7;
-    else if (left && up) return 1;
-    else if (left && !down && !up) return 8;
-    else if (right && down) return 5;
-    else if (right && up) return 3;
-    else if (right && !up && !down) return 4;
-    else if (!left && !right && up) return 2;
-    else if (!left && !right && down) return 6;
-    return 0;
-}
-
-
-
-string toString(int direction){
-    switch (direction){
-        case 1 : return "Up-Left";
-        case 2 : return "Up";
-        case 3 : return "Up-Right";
-        case 4 : return "Right";
-        case 5 : return "Down-Right";
-        case 6 : return "Down";
-        case 7 : return "Down-Left";
-        case 8 : return "Left";
-    }
-    return "";
-}
-
-
-int PreX(int X, int pos){
-    switch(pos){
-        case 1: return X + 1;
-        case 2: return X + 1;
-        case 3: return X + 1;
-        case 4: return X;
-        case 5: return X - 1;
-        case 6: return X - 1;
-        case 7: return X - 1;
-        case 8: return X;
-    }
-    return X;
-}
-
-int PreY(int Y, int pos){
-    switch(pos){
-        case 1: return Y + 1;
-        case 2: return Y;
-        case 3: return Y - 1;
-        case 4: return Y - 1;
-        case 5: return Y - 1;
-        case 6: return Y;
-        case 7: return Y + 1;
-        case 8: return Y + 1;
-    }
-    return Y;
-}
-
 double moveCost(int X1, int Y1, int X2, int Y2){
     double absX = abs(X1 - X2);
     double absY = abs(Y1 - Y2);
     double min = absX > absY ? absY : absX; 
-    double max = absX > absY ? absY : absX;
+    double max = absX < absY ? absY : absX;
 
     if (min == 0) return 1*max;
     else{
         return min * 1.5 + (max - min) * 1;
     }
     return 0;
-}
-
-vector<vector<int>> Neighbor(int X, int Y, int m, int n){
-    vector<vector<int>> neighbor;
-
-    for (int x = -1 ; x < 2;x++){
-        for(int y =-1 ; y < 2;y++){
-            if (x == 0 && y == 0) continue;
-            if (X + x < 0 || Y + y < 0 || X + x >= m || Y + y >= n) continue;
-            neighbor.push_back({(X + x),(Y + y)});
-        }
-    }
-    return neighbor;
 }
 
 string toCoord(int value, int m, int n){
@@ -186,8 +104,8 @@ string toCoord(int value, int m, int n){
     return res;
 }
 
-PathNode* findEvacuationPath(int floorPlan[100][100], int m, int n, int startX,
-int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
+PathNode* findPathInMaze2(int floorPlan[100][100], int m, int n, int startX,
+int startY, int exitX, int exitY, double weightMatrix[100][100], int mode = 1){
 
     vector<double> h(100, DBL_MAX);
     // Tạo weight matrixx
@@ -203,7 +121,7 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
             // Công thức chuyển hệ toạ độ thành các node;
             // Sẽ assign thứ tự từ trái sang phải
             // Với ma trận m x n = 3 x 5
-            // 0  1  2  3  4 
+                // 0  1  2  3  4 
             // 5  6  7  8  9
             // 10 11 12 13 14
 
@@ -215,8 +133,6 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
             // => X = Nodes / n;
             // => Y = Nodes % n; 
 
-
-    
             h[coordCurrent] = mode == 1 ? ManhattanDistance(currX,currY,exitX,exitY) : ChebyshevDistance(currX,currY,exitX,exitY);
             if (currX == startX && currY == startY){
                 start = coordCurrent;
@@ -230,19 +146,17 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
             for (vector<int> next : neighbor){
                 int nextX = next[0];
                 int nextY = next[1];
-                int coordNext = nextX * m + nextY;
+                int coordNext = nextX * n + nextY;
+          
                 double cost = moveCost(currX,currY,nextX,nextY);
                 weightMatrix[coordCurrent][coordNext] = cost;
-                
-          
-
             }
 
             // Bổ sung phần heuristic cost vào ở đây luôn
-
         }
     }
 
+    
     if (start == end) return nullptr;
 
     // Sử dụng dijkstra như bình thường
@@ -258,13 +172,12 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
 
     f[start] = h[start];
     g[start] = 0;
+    queue.clear();
     queue.push_back(start);
-
     while(!queue.empty()){
         // Lấy phần tử đầu tiên của queue.
-        
         double min = f[queue[0]], minIndex = 0;
-        for (int index  =0; index < queue.size() ; index++){
+        for (int index  = 1; index < queue.size() ; index++){
             if( min >   f[queue[index]]){
                 min = f[queue[index]];
                 minIndex = index;
@@ -272,15 +185,15 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
         }
         
         int current = queue[minIndex];
-        if (current == end) break; 
-        if (f[current] == DBL_MAX) return nullptr;
-        queue.erase(queue.begin() + minIndex);
-        
         if (visited[current] == true) continue;
         visited[current] = true;
+        if (f[current] == DBL_MAX) return nullptr;
+        queue.erase(queue.begin() + minIndex);
+        if (current == end) break;
 
+        
         for(int next = 0; next < range; next ++){
-            if (weightMatrix[current][next] < 0) continue;
+            if (weightMatrix[current][next] == 0) continue;
             if (visited[next] == true) continue;
             double temp = g[current] + weightMatrix[current][next];
             if (temp  < g[next]){
@@ -290,6 +203,8 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
                 queue.push_back(next);
             }
         }
+        
+        
     }
 
         
@@ -298,15 +213,15 @@ int startY, int exitX, int exitY, double weightMatrix[100][100], int mode){
 
     // Create node path
     PathNode* NodeList = new PathNode(toCoord(end,m,n),f[end],g[end],h[end],nullptr);
-    int pre = end;
-    while(pre != start){
-        pre = previous[pre];
+    int pre = previous[end];
+
+    while(pre != -1){
         insertHead(NodeList,toCoord(pre,m,n), f[pre], g[pre], h[pre]);
+        pre = previous[pre];
     }
 
     return NodeList;
 
 }
-
 
 
